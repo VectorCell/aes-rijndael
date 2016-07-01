@@ -12,6 +12,6 @@ addons:
             - clang-3.4
             - wamerican
 script:
-    - make test
-    - make test CC=gcc-4.8 CXX=g++-4.8
-    - make test CC=clang CXX=clang++
+    - make clean test
+    - make clean test CC=gcc-4.8 CXX=g++-4.8
+    - make clean test CC=clang CXX=clang++
