@@ -1,17 +1,17 @@
 sudo: false
 language: c++
 compiler:
-	- gcc
+    - gcc
 addons:
-	apt:
-		sources:
-		- ubuntu-toolchain-r-test
-		packages:
-		- gcc-4.8
-		- g++-4.8
-		- clang-3.4
-		- wamerican
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - gcc-4.8
+            - g++-4.8
+            - clang-3.4
+            - wamerican
 script:
-	 - make test
-	 - make test CC=gcc-4.8 CXX=g++-4.8
-	 - make test CC=clang CXX=clang++
+    - make test
+    - make test CC=gcc-4.8 CXX=g++-4.8
+    - make test CC=clang CXX=clang++
