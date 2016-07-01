@@ -114,9 +114,6 @@ private:
 			}
 		}
 	}
-
-	
-
 };
 
 template <typename OS, typename T>
