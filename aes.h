@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <cstring>
 
 #define AES_BLOCK_SIZE 16
 
@@ -77,6 +78,24 @@ public:
 			}
 		}
 		nrounds = 0;
+	}
+
+	void encryptBlock (uint8_t *block)
+	{
+		// HERE
+	}
+
+	bool encryptFile (FILE *infile, FILE *outfile)
+	{
+		std::vector<uint8_t> buffer(AES_BLOCK_SIZE);
+		uint8_t *buf = (uint8_t *)&buffer[0];
+		uint64_t count = 0;
+		while ((count = fread(buf, 1, buffer.size(), infile)) > 0) {
+			encryptBlock(buf);
+			fwrite(buf, 1, count, outfile);
+			memset(buf, 0, buffer.size());
+		}
+		return true;
 	}
 
 private:
