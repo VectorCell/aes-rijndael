@@ -244,7 +244,7 @@ void AESEngine::encryptAddRoundKey (uint8_t *block, uint8_t *roundkey)
 {
 	uint_fast32_t *blk = (uint_fast32_t *)block;
 	uint_fast32_t *rk  = (uint_fast32_t *)roundkey;
-	while ((int *)blk < (int *)(block + AES_BLOCK_SIZE)) {
+	while ((uint8_t *)blk < (block + AES_BLOCK_SIZE)) {
 		*(blk++) ^= *(rk++);
 	}
 }
@@ -266,19 +266,28 @@ void AESEngine::decryptAddRoundKey (uint8_t *block, uint8_t *roundkey)
 
 void AESEngine::encryptCBC (uint8_t *block, uint8_t *prev)
 {
-	for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
-		block[k] ^= prev[k];
-		prev[k] = block[k];
+	uint_fast32_t *blk = (uint_fast32_t *)block;
+	uint_fast32_t *pr  = (uint_fast32_t *)prev;
+	while ((uint8_t *)blk < (block + AES_BLOCK_SIZE)) {
+		*blk ^= *pr;
+		*pr = *blk;
+		++blk;
+		++pr;
 	}
 }
 
 
 void AESEngine::decryptCBC (uint8_t *block, uint8_t *prev)
 {
-	for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
-		uint8_t temp = block[k];
-		block[k] ^= prev[k];
-		prev[k] = temp;
+	uint_fast32_t temp;
+	uint_fast32_t *blk = (uint_fast32_t *)block;
+	uint_fast32_t *pr = (uint_fast32_t *)prev;
+	while ((uint8_t *)blk < (block + AES_BLOCK_SIZE)) {
+		temp = *blk;
+		*blk ^= *pr;
+		*pr = temp;
+		++blk;
+		++pr;
 	}
 }
 
@@ -378,7 +387,7 @@ int runtests ()
 		if (block[k] != copy[k])
 			return 1;
 
-	cout << endl << "PASS" << endl << endl;
+	cout << endl << "PASS" << endl;
 
 	return 0;
 }
@@ -387,7 +396,7 @@ int runtests ()
 int main (int argc, char *argv[])
 {
 	vector<uint8_t> key(16, 0);
-	AESEngine engine(AESEngine::AES_Mode::AES_128_CBC, key);
+	AESEngine engine(AESEngine::AES_Mode::AES_128_ECB, key);
 	if (argc >= 2) {
 		if (argv[1][0] == 'e') {
 			engine.encryptFile(stdin, stdout);

@@ -22,10 +22,18 @@ aes : aes.cc
 
 test : all
 	./aes t
+	@echo
 	echo "Hello World!" | md5sum
 	echo "Hello World!" | ./aes e | ./aes d | md5sum
+	@echo
 	echo "abcdefghijklmno" | md5sum
 	echo "abcdefghijklmno" | ./aes e | ./aes d | md5sum
+
+speedtest : test
+	dd if=/dev/zero of=temp bs=4k count=0 seek=16k 2> /dev/null
+	pv < temp | ./aes e > /dev/null
+	pv < temp | ./aes d > /dev/null
+	rm -f temp
 
 clean :
 	rm -f *.d
