@@ -9,8 +9,11 @@ ifeq "$(CXX)" "g++"
 	endif
 endif
 
+VALGRIND := valgrind
+
 CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
 CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
+LIBFLAGS  := -pthread -fopenmp
 
 all : aes
 
@@ -18,7 +21,11 @@ aes : aes.cc
 	$(CXX) $(CPPFLAGS) -o aes aes.cc $(LIBFLAGS)
 
 test : all
-	./aes
+	./aes t
+	echo "Hello World!" | md5sum
+	echo "Hello World!" | ./aes e | ./aes d | md5sum
+	echo "abcdefghijklmno" | md5sum
+	echo "abcdefghijklmno" | ./aes e | ./aes d | md5sum
 
 clean :
 	rm -f *.d
