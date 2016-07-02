@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef AES_HEADER_INCLUDED
-#define AES_HEADER_INCLUDED
+//#ifndef AES_HEADER_INCLUDED
+//#define AES_HEADER_INCLUDED
 
 #include <iostream>
 #include <vector>
@@ -13,15 +13,14 @@
 
 using namespace std;
 
-#define AES_BLOCK_SIZE 16
 
-const uint8_t *inverseLookupTable (const uint8_t[256]);
+#define AES_BLOCK_SIZE 16
 
 
 class AESEngine
 {
 public:
-	enum AES_Mode {
+	enum AESMode {
 		AES_128_ECB,
 		AES_192_ECB,
 		AES_256_ECB,
@@ -32,7 +31,7 @@ public:
 
 private:
 
-	const AES_Mode mode;
+	const AESMode mode;
 
 	vector<uint8_t> key;
 	vector<vector<uint8_t>> schedule;
@@ -43,7 +42,7 @@ private:
 
 public:
 
-	AESEngine (const AES_Mode m, const vector<uint8_t>& k);
+	AESEngine (const AESMode m, const vector<uint8_t>& k);
 	~AESEngine ();
 
 	vector<vector<uint8_t>> keyExpansion ();
@@ -54,35 +53,41 @@ public:
 	size_t encryptFile (FILE *in, FILE *out);
 	void decryptFile (FILE *in, FILE *out, size_t padding = 0);
 
-	void encryptSubBytes (uint8_t *block);
-	void decryptSubBytes (uint8_t *block);
+	static void encryptSubBytes (uint8_t *block);
+	static void decryptSubBytes (uint8_t *block);
 
-	void encryptShiftRows (uint8_t *block);
-	void decryptShiftRows (uint8_t *block);
+	static void encryptShiftRows (uint8_t *block);
+	static void decryptShiftRows (uint8_t *block);
 
-	void encryptMixColumns (uint8_t *block);
-	void decryptMixColumns (uint8_t *block);
+	static void encryptMixColumns (uint8_t *block);
+	static void decryptMixColumns (uint8_t *block);
 
-	void encryptAddRoundKey (uint8_t *block, uint8_t *roundkey);
-	void decryptAddRoundKey (uint8_t *block, uint8_t *roundkey);
+	static void encryptAddRoundKey (uint8_t *block, uint8_t *roundkey);
+	static void decryptAddRoundKey (uint8_t *block, uint8_t *roundkey);
 
-	void encryptCBC (uint8_t *block, uint8_t *prev);
-	void decryptCBC (uint8_t *block, uint8_t *prev);
+	static void encryptCBC (uint8_t *block, uint8_t *prev);
+	static void decryptCBC (uint8_t *block, uint8_t *prev);
 
-	void mixColumn (uint32_t *col);
-	void mixColumnInv (uint32_t *col);
+	static void mixColumn (uint32_t *col);
+	static void mixColumnInv (uint32_t *col);
 
-	void transpose (uint8_t *block);
+	static void transpose (uint8_t *block);
+
+	vector<uint8_t> generateKey ();
+	static vector<uint8_t> generateKey (AESMode m);
 
 	bool isModeECB ();
+	static bool isModeECB (AESMode m);
 	bool isModeCBC ();
+	static bool isModeCBC (AESMode m);
+
+	size_t keySize ();
+	static size_t keySize (AESMode m);
 };
 
 
 class IllegalAESBlockSize : public exception
 {
-private:
-
 public:
 
 	virtual const char* what() const throw()
@@ -90,6 +95,39 @@ public:
 		return "AES blocks must be 16 bytes";
 	}
 };
+
+
+class IllegalAESMode : public exception
+{
+public:
+
+	virtual const char* what() const throw()
+	{
+		return "illegal AES mode";
+	}
+};
+
+
+class KeyGenerationException : public exception
+{
+private:
+
+	const char *msg;
+
+public:
+
+	KeyGenerationException (const char *m) : msg(m) {}
+
+	virtual const char* what() const throw()
+	{
+		return msg;
+	}
+};
+
+
+/*
+**  bitwise rotation
+*/
 
 
 template <typename T>
@@ -138,4 +176,4 @@ void output_block (OS& os, const C& block)
 	os << endl;
 }
 
-#endif // AES_HEADER_INCLUDED
+//#endif // AES_HEADER_INCLUDED

@@ -5,13 +5,59 @@
 #include <cstdio>
 #include <cstdint>
 
+#include <unistd.h>
+
 #include "aes.h"
+
+
+typedef struct args_struct {
+	char opmode;
+
+	AESEngine::AESMode mode;
+	vector<uint8_t> key;
+} args_type;
+
+
+bool parse_args (int argc, char *argv[], args_type& args)
+{
+	args.mode = AESEngine::AESMode::AES_128_ECB;
+	args.key = vector<uint8_t>(16, 0);
+
+	int c;
+	while ((c = getopt(argc, argv, "i:npv")) != -1) {
+		switch (c) {
+			case 'i':
+				break;
+			case 'n':
+				break;
+			case 'p':
+				break;
+			case 'v':
+				break;
+			default:
+				fprintf(stderr, "unknown arg: %c\n", c);
+				return false;
+		}
+	}
+
+	for (int k = optind; k < argc; ++k) {
+		if (k == optind) {
+			args.opmode = argv[k][0];
+			//fprintf(stderr, "opmode: %c\n", args.opmode);
+		} else {
+			fprintf(stderr, "passed unnamed arg %s\n", argv[k]);
+
+		}
+	}
+
+	return true;
+}
 
 
 vector<uint8_t> random_block ()
 {
-	vector<uint8_t> block(16);
-	for (int k = 0; k < 16; ++k) {
+	vector<uint8_t> block(AES_BLOCK_SIZE);
+	for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
 		block[k] = (uint8_t)(0xff & rand());
 	}
 	return block;
@@ -20,8 +66,10 @@ vector<uint8_t> random_block ()
 
 int runtests ()
 {
-	vector<uint8_t> key(16, 0);
-	AESEngine engine(AESEngine::AES_Mode::AES_128_ECB, key);
+	vector<uint8_t> key = AESEngine::generateKey(AESEngine::AESMode::AES_128_ECB);
+	cout << "key:" << endl;
+	output_block(cout, &key[0]);
+	AESEngine engine(AESEngine::AESMode::AES_128_ECB, key);
 
 	vector<uint8_t> block(16);
 	vector<uint8_t> copy = block;
@@ -83,14 +131,18 @@ int runtests ()
 
 int main (int argc, char *argv[])
 {
-	vector<uint8_t> key(16, 0);
-	AESEngine engine(AESEngine::AES_Mode::AES_128_ECB, key);
+	args_type args;
+	if (!parse_args(argc, argv, args)) {
+		return EXIT_FAILURE;
+	}
+
+	AESEngine engine(args.mode, args.key);
 	if (argc >= 2) {
-		if (argv[1][0] == 'e') {
+		if (args.opmode == 'e') {
 			engine.encryptFile(stdin, stdout);
-		} else if (argv[1][0] == 'd') {
+		} else if (args.opmode == 'd') {
 			engine.decryptFile(stdin, stdout);
-		} else if (argv[1][0] == 't') {
+		} else if (args.opmode == 't') {
 			int ret = runtests();
 			if (ret != 0) {
 				cout << endl << "FAIL" << endl;

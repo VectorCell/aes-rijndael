@@ -9,6 +9,11 @@
 
 using namespace std;
 
+
+/*
+**  AES S-Box
+*/
+
 const uint8_t SBOX[256] = {
 	0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
 	0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -27,6 +32,13 @@ const uint8_t SBOX[256] = {
 	0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
 	0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
+const uint8_t *inverseLookupTable (const uint8_t table[256])
+{
+	static uint8_t reverse[256];
+	for (int k = 0; k < 256; ++k)
+		reverse[table[k]] = k;
+	return reverse;
+}
 const uint8_t *SBOX_INV = inverseLookupTable(SBOX);
 
 const uint8_t RCON[256] = {
@@ -168,9 +180,16 @@ const uint8_t GMUL_E[] = {
 };
 
 
-AESEngine::AESEngine (const AES_Mode m, const vector<uint8_t>& k)
-	: mode(m)
+AESEngine::AESEngine (const AESMode m, const vector<uint8_t>& k)
+	: mode(m), key(k)
 {
+	while (key.size() < keySize()) {
+		key.push_back(0);
+	}
+	if (key.size() > keySize()) {
+		key.resize(keySize());
+	}
+
 	key = vector<uint8_t>(k.size());
 	copy(k.begin(), k.end(), key.begin());
 
@@ -495,25 +514,69 @@ void AESEngine::transpose (uint8_t *block)
 	}
 }
 
+
+vector<uint8_t> AESEngine::generateKey ()
+{
+	return generateKey(mode);
+}
+
+
+vector<uint8_t> AESEngine::generateKey (AESMode m)
+{
+	vector<uint8_t> key(keySize(m));
+	FILE *random = fopen("/dev/urandom", "rb");
+	if (random == NULL)
+		throw KeyGenerationException("unable to open /dev/urandom");
+	if (random != NULL) {
+		size_t count = fread(&key[0], 1, key.size(), random);
+		if (count != key.size())
+			throw KeyGenerationException("unable to create enough entropy");
+	}
+	return key;
+}
+
+
 bool AESEngine::isModeECB ()
 {
-	return mode <= AES_Mode::AES_256_ECB;
+	return isModeECB(mode);
 }
+
+
+bool AESEngine::isModeECB (AESMode mode)
+{
+	return mode <= AESMode::AES_256_ECB;
+}
+
 
 bool AESEngine::isModeCBC ()
 {
-	return !isModeECB() && (mode <= AES_Mode::AES_256_CBC);
+	return isModeCBC(mode);
 }
 
-const uint8_t *inverseLookupTable (const uint8_t table[256])
+
+bool AESEngine::isModeCBC (AESMode mode)
 {
-	static uint8_t reverse[256];
-	static bool generated = false;
-	if (!generated) {
-		for (int k = 0; k < 256; ++k) {
-			reverse[table[k]] = k;
-		}
-		generated = true;
+	return !isModeECB(mode) && (mode <= AESMode::AES_256_CBC);
+}
+
+
+size_t AESEngine::keySize ()
+{
+	return keySize(mode);
+}
+
+
+size_t AESEngine::keySize (AESMode mode)
+{
+	int m = mode & 0x3;
+	switch (m) {
+		case 0:
+			return 16;
+		case 1:
+			return 24;
+		case 2:
+			return 32;
+		default:
+			throw IllegalAESMode();
 	}
-	return reverse;
 }
