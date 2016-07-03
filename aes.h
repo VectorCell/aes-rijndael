@@ -163,6 +163,32 @@ T rotr (T x, unsigned int n)
 */
 
 
+template <typename S>
+S tolowercase (const S& str)
+{
+	S copy(str);
+	for (auto i = copy.begin(); i != copy.end(); ++i) {
+		if (*i >= 'A' && *i <= 'Z') {
+			*i += ('a' - 'A');
+		}
+	}
+	return copy;
+}
+
+
+template <typename S>
+S touppercase (const S& str)
+{
+	S copy(str);
+	for (auto i = copy.begin(); i != copy.end(); ++i) {
+		if (*i >= 'a' && *i <= 'z') {
+			*i -= ('a' - 'A');
+		}
+	}
+	return copy;
+}
+
+
 template <typename OS, typename T>
 void output_hex (OS& os, T n)
 {
