@@ -261,6 +261,8 @@ vector<vector<uint8_t>> AESEngine::keyExpansion ()
 
 void AESEngine::encryptBlock (uint8_t *block)
 {
+	if (isModeCBC())
+		encryptCBC(block, &prev[0]);
 	encryptAddRoundKey(block, &schedule[0][0]);
 	for (int r = 0; r < nrounds; ++r) {
 		encryptSubBytes(block);
@@ -271,8 +273,6 @@ void AESEngine::encryptBlock (uint8_t *block)
 	encryptSubBytes(block);
 	encryptShiftRows(block);
 	encryptAddRoundKey(block, &schedule[nrounds][0]);
-	if (isModeCBC())
-		encryptCBC(block, &prev[0]);
 }
 
 
@@ -317,8 +317,6 @@ void AESEngine::encryptFile (FILE *infile, FILE *outfile)
 
 void AESEngine::decryptBlock (uint8_t *block)
 {
-	if (isModeCBC())
-		decryptCBC(block, &prev[0]);
 	decryptAddRoundKey(block, &schedule[nrounds][0]);
 	decryptShiftRows(block);
 	decryptSubBytes(block);
@@ -329,6 +327,8 @@ void AESEngine::decryptBlock (uint8_t *block)
 		decryptSubBytes(block);
 	}
 	decryptAddRoundKey(block, &schedule[0][0]);
+	if (isModeCBC())
+		decryptCBC(block, &prev[0]);
 }
 
 
@@ -615,13 +615,15 @@ size_t AESEngine::keySize ()
 
 size_t AESEngine::keySize (AESMode mode)
 {
-	int m = mode & 0x3;
-	switch (m) {
-		case 0:
+	switch (mode) {
+		case AESMode::AES_128_ECB:
+		case AESMode::AES_128_CBC:
 			return 16;
-		case 1:
+		case AESMode::AES_192_ECB:
+		case AESMode::AES_192_CBC:
 			return 24;
-		case 2:
+		case AESMode::AES_256_ECB:
+		case AESMode::AES_256_CBC:
 			return 32;
 		default:
 			throw IllegalAESMode();
