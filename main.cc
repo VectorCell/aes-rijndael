@@ -55,6 +55,7 @@ bool parse_args (int argc, char *argv[], args_type& args)
 		}
 	}
 
+	mode = tolower(mode);
 	if (size == 128) {
 		if (mode == "ecb") {
 			args.mode = AESEngine::AESMode::AES_128_ECB;
