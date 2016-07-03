@@ -36,15 +36,20 @@ speedtest : test
 
 paddingtest : test
 	echo "Hello world, this is Brandon! I'm so pleased to meet you!" \
-		| ./aes e 2> encryption.log      \
-		| ./aes d 2> decryption.log      \
-		| tee output.log                 \
+		| ./aes e 2> encryption.log                                  \
+		| ./aes d 2> decryption.log                                  \
+		| tee output.log                                             \
 		| hexdump
 	@echo
-	cat encryption.log
-	cat decryption.log
-	cat output.log
+	@cat encryption.log
+	@cat decryption.log
+	@cat output.log
 	@rm -f encryption.log decryption.log output.log
+
+merge-master: test
+	git checkout master
+	git merge dev
+	git push
 
 clean :
 	rm -f *.d
