@@ -66,15 +66,15 @@ vector<uint8_t> random_block ()
 
 int runtests ()
 {
+	cout << "Running unit tests ..." << endl;
+
 	vector<uint8_t> key = AESEngine::generateKey(AESEngine::AESMode::AES_128_ECB);
-	cout << "key:" << endl;
-	output_block(cout, &key[0]);
 	AESEngine engine(AESEngine::AESMode::AES_128_ECB, key);
 
 	vector<uint8_t> block(16);
 	vector<uint8_t> copy = block;
 
-	cout << "testing subBytes" << endl;
+	cout << "\ttesting subBytes ... ";
 	block = random_block();
 	copy = block;
 	engine.encryptSubBytes(&block[0]);
@@ -85,8 +85,9 @@ int runtests ()
 	for (int k = 0; k < 16; ++k)
 		if (block[k] != copy[k])
 			return 1;
+	cout << "PASS" << endl;
 
-	cout << "testing transpose" << endl;
+	cout << "\ttesting transpose ... ";
 	block = random_block();
 	copy = block;
 	engine.transpose(&block[0]);
@@ -94,8 +95,9 @@ int runtests ()
 	for (int k = 0; k < 16; ++k)
 		if (block[k] != copy[k])
 			return 1;
+	cout << "PASS" << endl;
 
-	cout << "testing shiftRows" << endl;
+	cout << "\ttesting shiftRows ... ";
 	block = random_block();
 	copy = block;
 	engine.encryptShiftRows(&block[0]);
@@ -103,8 +105,9 @@ int runtests ()
 	for (int k = 0; k < 16; ++k)
 		if (block[k] != copy[k])
 			return 1;
+	cout << "PASS" << endl;
 
-	cout << "testing mixColumn" << endl;
+	cout << "\ttesting mixColumn ... ";
 	for (int k = 0; k < 8; ++k) {
 		uint32_t n = rand();
 		uint32_t copy = n;
@@ -113,8 +116,9 @@ int runtests ()
 		if (n != copy)
 			return 1;
 	}
+	cout << "PASS" << endl;
 
-	cout << "testing mixColumns" << endl;
+	cout << "\ttesting mixColumns ... ";
 	block = random_block();
 	copy = block;
 	engine.encryptMixColumns(&block[0]);
@@ -122,8 +126,7 @@ int runtests ()
 	for (int k = 0; k < 16; ++k)
 		if (block[k] != copy[k])
 			return 1;
-
-	cout << endl << "PASS" << endl;
+	cout << "PASS" << endl;
 
 	return 0;
 }
@@ -145,7 +148,7 @@ int main (int argc, char *argv[])
 		} else if (args.opmode == 't') {
 			int ret = runtests();
 			if (ret != 0) {
-				cout << endl << "FAIL" << endl;
+				cout << "FAIL" << endl;
 				return ret;
 			}
 		}

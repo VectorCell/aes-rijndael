@@ -26,21 +26,25 @@ aes : main.o aes.o
 
 test : all
 	./aes t
-	@echo
-	@echo "Hello World!" | md5sum
-	@echo "Hello World!" | ./aes e | ./aes d | md5sum
-	@echo
-	@echo "Hello World!" | tr -dc '[:print:]\n\t' | md5sum
-	@echo "Hello World!" | ./aes e | ./aes d | tr -dc '[:print:]\n\t' | md5sum
-	@echo
-	@echo "abcdefghijklmno" | md5sum
-	@echo "abcdefghijklmno" | ./aes e | ./aes d | md5sum
+	@./test.sh
 
 speedtest : test
 	dd if=/dev/zero of=temp bs=4k count=0 seek=16k 2> /dev/null
 	pv < temp | ./aes e > /dev/null
 	pv < temp | ./aes d > /dev/null
 	rm -f temp
+
+paddingtest : test
+	echo "Hello world, this is Brandon! I'm so pleased to meet you!" \
+		| ./aes e 2> encryption.log      \
+		| ./aes d 2> decryption.log      \
+		| tee output.log                 \
+		| hexdump
+	@echo
+	cat encryption.log
+	cat decryption.log
+	cat output.log
+	@rm -f encryption.log decryption.log output.log
 
 clean :
 	rm -f *.d

@@ -50,8 +50,8 @@ public:
 	void encryptBlock (uint8_t *block);
 	void decryptBlock (uint8_t *block);
 
-	size_t encryptFile (FILE *in, FILE *out);
-	void decryptFile (FILE *in, FILE *out, size_t padding = 0);
+	void encryptFile (FILE *in, FILE *out);
+	void decryptFile (FILE *in, FILE *out);
 
 	static void encryptSubBytes (uint8_t *block);
 	static void decryptSubBytes (uint8_t *block);
@@ -88,11 +88,20 @@ public:
 
 class IllegalAESBlockSize : public exception
 {
+
+private:
+
+	const char *msg;
+
 public:
+
+	IllegalAESBlockSize (const char *m = "AES blocks must be 16 bytes")
+		: msg(m)
+	{}
 
 	virtual const char* what() const throw()
 	{
-		return "AES blocks must be 16 bytes";
+		return msg;
 	}
 };
 
@@ -160,6 +169,28 @@ void output_hex (OS& os, T n)
 		int byte = (n >> (d << 3));
 		os << DIGITS[(byte & 0xf0) >> 4] << DIGITS[byte & 0x0f];
 	}	
+}
+
+
+template <typename OS, typename C>
+void output_line (OS& os, const C& block, bool ascii = false)
+{
+	for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
+		output_hex(os, block[k]);
+		os << " ";
+	}
+	if (ascii) {
+		os << " (";
+		for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
+			if (block[k] >= 32 && block[k] <= 126) {
+				os << (char)block[k];
+			} else {
+				os << ".";
+			}
+		}
+		os << ")";
+	}
+	os << endl;
 }
 
 

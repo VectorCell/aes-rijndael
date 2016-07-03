@@ -275,22 +275,33 @@ void AESEngine::encryptBlock (uint8_t *block)
 }
 
 
-size_t AESEngine::encryptFile (FILE *infile, FILE *outfile)
+void AESEngine::encryptFile (FILE *infile, FILE *outfile)
 {
-	vector<uint8_t> buffer(AES_BLOCK_SIZE);
-	uint8_t *buf = (uint8_t *)&buffer[0];
+	vector<uint8_t> bufferA(AES_BLOCK_SIZE);
+	uint8_t *buf = (uint8_t *)&bufferA[0];
 	size_t count = 0;
-	size_t padding = 0;
+	bool stopped_at_bounds = true;
 	while ((count = fread(buf, 1, AES_BLOCK_SIZE, infile)) > 0) {
+
+		if (count < AES_BLOCK_SIZE) {
+			stopped_at_bounds = false;
+			uint8_t val = (uint8_t)(AES_BLOCK_SIZE - count);
+			while (count < AES_BLOCK_SIZE) {
+				bufferA[count] = val;
+				++count;
+			}
+		}
+
 		encryptBlock(buf);
 		fwrite(buf, 1, AES_BLOCK_SIZE, outfile);
-		if (count < AES_BLOCK_SIZE) {
-			padding = AES_BLOCK_SIZE - count;
-		} else {
-			memset(buf, 0, buffer.size());
-		}
 	}
-	return padding;
+	if (stopped_at_bounds) {
+		for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
+			buf[k] = 0x10;
+		}
+		encryptBlock(buf);
+		fwrite(buf, 1, AES_BLOCK_SIZE, outfile);
+	}
 }
 
 
@@ -320,18 +331,38 @@ void AESEngine::decryptBlock (uint8_t *block)
 }
 
 
-void AESEngine::decryptFile (FILE *infile, FILE *outfile, size_t padding)
+void AESEngine::decryptFile (FILE *infile, FILE *outfile)
 {
-	vector<uint8_t> buffer(AES_BLOCK_SIZE);
-	uint8_t *buf = (uint8_t *)&buffer[0];
-	uint64_t count = 0;
-	while ((count = fread(buf, 1, buffer.size(), infile)) > 0) {
+	vector<uint8_t> bufferA(AES_BLOCK_SIZE);
+	vector<uint8_t> bufferB(AES_BLOCK_SIZE);
+	vector<uint8_t> bufferC(AES_BLOCK_SIZE);
+	uint8_t *newest = (uint8_t *)&bufferA[0];
+	uint8_t *next   = (uint8_t *)&bufferB[0];
+	uint8_t *oldest = (uint8_t *)&bufferC[0];
+	size_t nblocks = 0;
+	size_t count = 0;
+	while ((count = fread(newest, 1, AES_BLOCK_SIZE, infile)) > 0) {
 		if (count != AES_BLOCK_SIZE) {
 			throw IllegalAESBlockSize();
 		}
-		decryptBlock(buf);
-		fwrite(buf, 1, AES_BLOCK_SIZE, outfile);
-		memset(buf, 0, buffer.size());
+
+		++nblocks;
+
+		if (nblocks >= 2) {
+			decryptBlock(oldest);
+			fwrite(oldest, 1, AES_BLOCK_SIZE, outfile);
+		}
+
+		uint8_t *temp = next;
+		next = newest;
+		oldest = next;
+		newest = temp;
+	}
+
+	decryptBlock(next);
+	uint8_t padding = next[AES_BLOCK_SIZE - 1];
+	if (padding < 0x10) {
+		fwrite(next, 1, AES_BLOCK_SIZE - padding, outfile);
 	}
 }
 
