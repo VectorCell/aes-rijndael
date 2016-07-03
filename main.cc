@@ -17,12 +17,18 @@ typedef struct args_struct {
 	AESEngine::AESMode mode;
 	vector<uint8_t> key;
 
+	FILE *infile;
+	FILE *outfile;
+
 	args_struct ()
 	{
 		verbose = false;
-		opmode = 'e';
+		opmode = '-';
 		mode = AESEngine::AESMode::AES_128_ECB;
-		key = vector<uint8_t>(16);
+		key = vector<uint8_t>(AESEngine::keySize(mode));
+
+		infile = stdin;
+		outfile = stdout;
 	}
 
 } args_type;
@@ -38,7 +44,7 @@ bool parse_args (int argc, char *argv[], args_type& args)
 	string keyfilename;
 
 	int c;
-	while ((c = getopt(argc, argv, "m:s:k:v")) != -1) {
+	while ((c = getopt(argc, argv, "m:s:k:i:o:v")) != -1) {
 		switch (c) {
 			case 'm':
 				mode = optarg;
@@ -49,6 +55,12 @@ bool parse_args (int argc, char *argv[], args_type& args)
 			case 'v':
 				args.verbose = true;
 				break;
+			case 'i':
+				fprintf(stderr, "not yet implemented\n");
+				return false;
+			case 'o':
+				fprintf(stderr, "not yet implemented\n");
+				return false;
 			default:
 				fprintf(stderr, "unknown arg: %c\n", c);
 				return false;
@@ -182,6 +194,37 @@ int runtests ()
 }
 
 
+void print_help ()
+{
+	printf("USAGE: aes MODE [OPTIONS] [-i inputfile] [-o outputfile]\n");
+	printf("\n");
+	printf("MODE\n");
+	printf("\n");
+	printf("\te    encryption\n");
+	printf("\n");
+	printf("\td    decryption\n");
+	printf("\n");
+	printf("\tg    generates a key (sized according to the -s option), writes it to output\n");
+	printf("\n");
+	printf("\th    shows this help information\n");
+	printf("\n");
+	printf("\n");
+	printf("OPTIONS\n");
+	printf("\n");
+	printf("\t-s SIZE\n");
+	printf("\t\tThe key size, which can be 128, 192, or 256.\n");
+	printf("\t\tThe default value is 128.\n");
+	printf("\n");
+	printf("\t-m MODE\n");
+	printf("\t\tThe AES block cipher mode. ECB or CBC.\n");
+	printf("\t\tThe default value is ECB.\n");
+	printf("\n");
+	printf("\t-v\n");
+	printf("\t\tSets verbose mode\n");
+	printf("\n");
+}
+
+
 int main (int argc, char *argv[])
 {
 	args_type args;
@@ -190,23 +233,28 @@ int main (int argc, char *argv[])
 	}
 
 	AESEngine engine(args.mode, args.key);
-	if (argc >= 2) {
-		if (args.opmode == 'e') {
-			engine.encryptFile(stdin, stdout);
-		} else if (args.opmode == 'd') {
-			engine.decryptFile(stdin, stdout);
-		} else if (args.opmode == 'g') {
-			vector<uint8_t> key = engine.generateKey();
-			for (unsigned int k = 0; k < key.size(); ++k) {
-				printf("%c", (char)key[k]);
-			}
-		} else if (args.opmode == 't') {
-			int ret = runtests();
-			if (ret != 0) {
-				cout << "FAIL" << endl;
-				return ret;
-			}
+
+	if (args.opmode == 'e') {
+		engine.encryptFile(stdin, stdout);
+	} else if (args.opmode == 'd') {
+		engine.decryptFile(stdin, stdout);
+	} else if (args.opmode == 'g') {
+		vector<uint8_t> key = engine.generateKey();
+		for (unsigned int k = 0; k < key.size(); ++k) {
+			printf("%c", (char)key[k]);
 		}
+	} else if (args.opmode == 'h' || args.opmode == '-') {
+		print_help();
+	} else if (args.opmode == 't') {
+		int ret = runtests();
+		if (ret != 0) {
+			cout << "FAIL" << endl;
+			return ret;
+		}
+	} else {
+		fprintf(stderr, "unknown mode: %c\n", args.opmode);
+		return EXIT_FAILURE;
 	}
-	return 0;
+
+	return EXIT_SUCCESS;
 }

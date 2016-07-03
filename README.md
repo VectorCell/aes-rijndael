@@ -13,11 +13,13 @@ If no output file is specified, output is written to stdout.
 ```
 MODE
 
-	e    encrytion
+	e    encryption
 
 	d    decryption
 
 	g    generates a key (sized according to the -s option), writes it to output
+
+	h    shows this help information
 
 
 OPTIONS
