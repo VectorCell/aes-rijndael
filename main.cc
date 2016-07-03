@@ -11,10 +11,20 @@
 
 
 typedef struct args_struct {
-	char opmode;
 
+	bool verbose;
+	char opmode;
 	AESEngine::AESMode mode;
 	vector<uint8_t> key;
+
+	args_struct ()
+	{
+		verbose = false;
+		opmode = 'e';
+		mode = AESEngine::AESMode::AES_128_ECB;
+		key = vector<uint8_t>(16);
+	}
+
 } args_type;
 
 
@@ -23,16 +33,21 @@ bool parse_args (int argc, char *argv[], args_type& args)
 	args.mode = AESEngine::AESMode::AES_128_ECB;
 	args.key = vector<uint8_t>(16, 0);
 
+	string mode = "ecb";
+	int size = 128;
+	string keyfilename;
+
 	int c;
-	while ((c = getopt(argc, argv, "i:npv")) != -1) {
+	while ((c = getopt(argc, argv, "m:s:k:v")) != -1) {
 		switch (c) {
-			case 'i':
+			case 'm':
+				mode = optarg;
 				break;
-			case 'n':
-				break;
-			case 'p':
+			case 's':
+				size = atoi(optarg);
 				break;
 			case 'v':
+				args.verbose = true;
 				break;
 			default:
 				fprintf(stderr, "unknown arg: %c\n", c);
@@ -40,10 +55,43 @@ bool parse_args (int argc, char *argv[], args_type& args)
 		}
 	}
 
+	if (size == 128) {
+		if (mode == "ecb") {
+			args.mode = AESEngine::AESMode::AES_128_ECB;
+		} else if (mode == "cbc") {
+			args.mode = AESEngine::AESMode::AES_128_CBC;
+		} else {
+			fprintf(stderr, "invalid mode: %s\n", mode.c_str());
+			return false;
+		}
+	} else if (size == 192) {
+		if (mode == "ecb") {
+			args.mode = AESEngine::AESMode::AES_192_ECB;
+		} else if (mode == "cbc") {
+			args.mode = AESEngine::AESMode::AES_192_CBC;
+		} else {
+			fprintf(stderr, "invalid mode: %s\n", mode.c_str());
+			return false;
+		}
+	} else if (size == 256) {
+		if (mode == "ecb") {
+			args.mode = AESEngine::AESMode::AES_256_ECB;
+		} else if (mode == "cbc") {
+			args.mode = AESEngine::AESMode::AES_256_CBC;
+		} else {
+			fprintf(stderr, "invalid mode: %s\n", mode.c_str());
+			return false;
+		}
+	} else {
+		fprintf(stderr, "unknown size: %d\n", size);
+		return false;
+	}
+
 	for (int k = optind; k < argc; ++k) {
 		if (k == optind) {
 			args.opmode = argv[k][0];
-			//fprintf(stderr, "opmode: %c\n", args.opmode);
+		} else if (k == optind + 1) {
+			keyfilename = argv[k];
 		} else {
 			fprintf(stderr, "passed unnamed arg %s\n", argv[k]);
 
@@ -68,7 +116,8 @@ int runtests ()
 {
 	cout << "Running unit tests ..." << endl;
 
-	vector<uint8_t> key = AESEngine::generateKey(AESEngine::AESMode::AES_128_ECB);
+	vector<uint8_t> key = AESEngine::generateKey(
+		AESEngine::AESMode::AES_128_ECB);
 	AESEngine engine(AESEngine::AESMode::AES_128_ECB, key);
 
 	vector<uint8_t> block(16);
@@ -145,6 +194,11 @@ int main (int argc, char *argv[])
 			engine.encryptFile(stdin, stdout);
 		} else if (args.opmode == 'd') {
 			engine.decryptFile(stdin, stdout);
+		} else if (args.opmode == 'g') {
+			vector<uint8_t> key = engine.generateKey();
+			for (unsigned int k = 0; k < key.size(); ++k) {
+				printf("%c", (char)key[k]);
+			}
 		} else if (args.opmode == 't') {
 			int ret = runtests();
 			if (ret != 0) {

@@ -14,7 +14,7 @@ using namespace std;
 **  AES S-Box
 */
 
-const uint8_t SBOX[256] = {
+static const uint8_t SBOX[256] = {
 	0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
 	0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
 	0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
@@ -32,16 +32,16 @@ const uint8_t SBOX[256] = {
 	0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
 	0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
-const uint8_t *inverseLookupTable (const uint8_t table[256])
+static const uint8_t *inverseLookupTable (const uint8_t table[256])
 {
 	static uint8_t reverse[256];
 	for (int k = 0; k < 256; ++k)
 		reverse[table[k]] = k;
 	return reverse;
 }
-const uint8_t *SBOX_INV = inverseLookupTable(SBOX);
+static const uint8_t *SBOX_INV = inverseLookupTable(SBOX);
 
-const uint8_t RCON[256] = {
+static const uint8_t RCON[256] = {
 	0x8D, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
 	0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A, 0xD4, 0xB3, 0x7D, 0xFA, 0xEF, 0xC5, 0x91, 0x39,
 	0x72, 0xE4, 0xD3, 0xBD, 0x61, 0xC2, 0x9F, 0x25, 0x4A, 0x94, 0x33, 0x66, 0xCC, 0x83, 0x1D, 0x3A,
@@ -65,7 +65,7 @@ const uint8_t RCON[256] = {
 **  Precomputed multiplication in Galois field
 */
 
-const uint8_t GMUL_2[] = {
+static const uint8_t GMUL_2[] = {
 	0X00, 0X02, 0X04, 0X06, 0X08, 0X0A, 0X0C, 0X0E, 0X10, 0X12, 0X14, 0X16, 0X18, 0X1A, 0X1C, 0X1E,
 	0X20, 0X22, 0X24, 0X26, 0X28, 0X2A, 0X2C, 0X2E, 0X30, 0X32, 0X34, 0X36, 0X38, 0X3A, 0X3C, 0X3E,
 	0X40, 0X42, 0X44, 0X46, 0X48, 0X4A, 0X4C, 0X4E, 0X50, 0X52, 0X54, 0X56, 0X58, 0X5A, 0X5C, 0X5E,
@@ -84,7 +84,7 @@ const uint8_t GMUL_2[] = {
 	0XFB, 0XF9, 0XFF, 0XFD, 0XF3, 0XF1, 0XF7, 0XF5, 0XEB, 0XE9, 0XEF, 0XED, 0XE3, 0XE1, 0XE7, 0XE5
 };
 
-const uint8_t GMUL_3[] = {
+static const uint8_t GMUL_3[] = {
 	0X00, 0X03, 0X06, 0X05, 0X0C, 0X0F, 0X0A, 0X09, 0X18, 0X1B, 0X1E, 0X1D, 0X14, 0X17, 0X12, 0X11,
 	0X30, 0X33, 0X36, 0X35, 0X3C, 0X3F, 0X3A, 0X39, 0X28, 0X2B, 0X2E, 0X2D, 0X24, 0X27, 0X22, 0X21,
 	0X60, 0X63, 0X66, 0X65, 0X6C, 0X6F, 0X6A, 0X69, 0X78, 0X7B, 0X7E, 0X7D, 0X74, 0X77, 0X72, 0X71,
@@ -103,7 +103,7 @@ const uint8_t GMUL_3[] = {
 	0X0B, 0X08, 0X0D, 0X0E, 0X07, 0X04, 0X01, 0X02, 0X13, 0X10, 0X15, 0X16, 0X1F, 0X1C, 0X19, 0X1A
 };
 
-const uint8_t GMUL_9[] = {
+static const uint8_t GMUL_9[] = {
 	0X00, 0X09, 0X12, 0X1B, 0X24, 0X2D, 0X36, 0X3F, 0X48, 0X41, 0X5A, 0X53, 0X6C, 0X65, 0X7E, 0X77,
 	0X90, 0X99, 0X82, 0X8B, 0XB4, 0XBD, 0XA6, 0XAF, 0XD8, 0XD1, 0XCA, 0XC3, 0XFC, 0XF5, 0XEE, 0XE7,
 	0X3B, 0X32, 0X29, 0X20, 0X1F, 0X16, 0X0D, 0X04, 0X73, 0X7A, 0X61, 0X68, 0X57, 0X5E, 0X45, 0X4C,
@@ -122,7 +122,7 @@ const uint8_t GMUL_9[] = {
 	0X31, 0X38, 0X23, 0X2A, 0X15, 0X1C, 0X07, 0X0E, 0X79, 0X70, 0X6B, 0X62, 0X5D, 0X54, 0X4F, 0X46
 };
 
-const uint8_t GMUL_B[] = {
+static const uint8_t GMUL_B[] = {
 	0X00, 0X0B, 0X16, 0X1D, 0X2C, 0X27, 0X3A, 0X31, 0X58, 0X53, 0X4E, 0X45, 0X74, 0X7F, 0X62, 0X69,
 	0XB0, 0XBB, 0XA6, 0XAD, 0X9C, 0X97, 0X8A, 0X81, 0XE8, 0XE3, 0XFE, 0XF5, 0XC4, 0XCF, 0XD2, 0XD9,
 	0X7B, 0X70, 0X6D, 0X66, 0X57, 0X5C, 0X41, 0X4A, 0X23, 0X28, 0X35, 0X3E, 0X0F, 0X04, 0X19, 0X12,
@@ -141,7 +141,7 @@ const uint8_t GMUL_B[] = {
 	0XCA, 0XC1, 0XDC, 0XD7, 0XE6, 0XED, 0XF0, 0XFB, 0X92, 0X99, 0X84, 0X8F, 0XBE, 0XB5, 0XA8, 0XA3
 };
 
-const uint8_t GMUL_D[] = {
+static const uint8_t GMUL_D[] = {
 	0X00, 0X0D, 0X1A, 0X17, 0X34, 0X39, 0X2E, 0X23, 0X68, 0X65, 0X72, 0X7F, 0X5C, 0X51, 0X46, 0X4B,
 	0XD0, 0XDD, 0XCA, 0XC7, 0XE4, 0XE9, 0XFE, 0XF3, 0XB8, 0XB5, 0XA2, 0XAF, 0X8C, 0X81, 0X96, 0X9B,
 	0XBB, 0XB6, 0XA1, 0XAC, 0X8F, 0X82, 0X95, 0X98, 0XD3, 0XDE, 0XC9, 0XC4, 0XE7, 0XEA, 0XFD, 0XF0,
@@ -160,7 +160,7 @@ const uint8_t GMUL_D[] = {
 	0XDC, 0XD1, 0XC6, 0XCB, 0XE8, 0XE5, 0XF2, 0XFF, 0XB4, 0XB9, 0XAE, 0XA3, 0X80, 0X8D, 0X9A, 0X97
 };
 
-const uint8_t GMUL_E[] = {
+static const uint8_t GMUL_E[] = {
 	0X00, 0X0E, 0X1C, 0X12, 0X38, 0X36, 0X24, 0X2A, 0X70, 0X7E, 0X6C, 0X62, 0X48, 0X46, 0X54, 0X5A,
 	0XE0, 0XEE, 0XFC, 0XF2, 0XD8, 0XD6, 0XC4, 0XCA, 0X90, 0X9E, 0X8C, 0X82, 0XA8, 0XA6, 0XB4, 0XBA,
 	0XDB, 0XD5, 0XC7, 0XC9, 0XE3, 0XED, 0XFF, 0XF1, 0XAB, 0XA5, 0XB7, 0XB9, 0X93, 0X9D, 0X8F, 0X81,
@@ -203,6 +203,7 @@ AESEngine::AESEngine (const AESMode m, const vector<uint8_t>& k)
 AESEngine::~AESEngine ()
 {
 	fill(key.begin(), key.end(), 0);
+	fill(prev.begin(), prev.end(), 0);
 	for (unsigned int b = 0; b < schedule.size(); ++b) {
 		for (int k = 0; k < AES_BLOCK_SIZE; ++k) {
 			schedule[b][k] = 0;
@@ -543,6 +544,21 @@ void AESEngine::transpose (uint8_t *block)
 			swap(block[c * 4 + r], block[r * 4 + c]);
 		}
 	}
+}
+
+
+vector<uint8_t> AESEngine::loadKey (const char* filename, AESMode m)
+{
+	FILE *kf = fopen(filename, "rb");
+	vector<uint8_t> key(keySize(m));
+	if (kf != NULL) {
+		size_t count = fread(&key[0], 1, key.size(), kf);
+		if (count < key.size()) {
+
+		}
+		fclose(kf);
+	}
+	return key;
 }
 
 

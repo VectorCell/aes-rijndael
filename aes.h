@@ -73,6 +73,8 @@ public:
 
 	static void transpose (uint8_t *block);
 
+	static vector<uint8_t> loadKey (const char* filename, AESMode m);
+
 	vector<uint8_t> generateKey ();
 	static vector<uint8_t> generateKey (AESMode m);
 

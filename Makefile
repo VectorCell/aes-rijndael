@@ -50,6 +50,7 @@ merge-master: test
 	git checkout master
 	git merge dev
 	git push
+	git checkout dev
 
 clean :
 	rm -f *.d
