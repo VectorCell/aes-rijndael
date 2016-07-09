@@ -107,7 +107,6 @@ bool parse_args (int argc, char *argv[], args_type& args)
 			keyfilename = argv[k];
 		} else {
 			fprintf(stderr, "passed unnamed arg %s\n", argv[k]);
-
 		}
 	}
 

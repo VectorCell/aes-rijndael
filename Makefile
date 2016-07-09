@@ -52,6 +52,12 @@ merge-master: test
 	git push
 	git checkout dev
 
+install:
+	./install.sh
+
+uninstall:
+	./uninstall.sh
+
 clean :
 	rm -f *.d
 	rm -f *.o
